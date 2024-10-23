@@ -27,7 +27,7 @@ scaler = StandardScaler()
 X_scaled = scaler.fit_transform(df_X_numeric)  # Scale the features
 
 # Perform K-Means clustering with k=7
-k = 7
+k = 8
 kmeans = KMeans(n_clusters=k, random_state=42)
 kmeans.fit(X_scaled)
 labels = kmeans.labels_

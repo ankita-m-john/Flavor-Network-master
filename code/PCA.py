@@ -3,6 +3,13 @@ import numpy as np
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
+import seaborn as sns
+from scipy.spatial.distance import pdist, squareform
+from sklearn.manifold import MDS, TSNE
+# from bokeh.palettes import Category10, Category20, Viridis256
+from bokeh.plotting import figure, output_file, show, ColumnDataSource
+from bokeh.models import HoverTool, ColorBar
+from matplotlib.colors import to_hex
 
 # Load your data (replace with your specific dataset)
 yum_ingrX = pd.read_pickle('/Users/ankita/Downloads/Flavor-Network-master/data/yummly_ingrX.pkl')

@@ -15,7 +15,7 @@ from bokeh.plotting import figure, output_file, show, ColumnDataSource
 from bokeh.models import HoverTool
 
 #take some regional cuisines, tsne clustering, and plotting
-def tsne_cluster_cuisine(df,sublist):
+def tsne_cluster_cuisine(df,sublist, perplexity_values, learning_rate_values):
     lenlist=[0]
     df_sub = df[df['cuisine']==sublist[0]]
     lenlist.append(df_sub.shape[0])
@@ -27,8 +27,13 @@ def tsne_cluster_cuisine(df,sublist):
     print(df_X.shape, lenlist)
 
     dist = squareform(pdist(df_X, metric='cosine'))
-    tsne = TSNE(metric='precomputed', init='random').fit_transform(dist)
-
+    
+    # Tune different values of perplexity and learning rate
+    for perplexity in perplexity_values:
+        for lr in learning_rate_values:
+            tsne = TSNE(metric='precomputed', init='random', perplexity=perplexity, 
+                        learning_rate=lr, max_iter=1000).fit_transform(dist)
+            
     palette = sns.color_palette("hls", len(sublist))
     plt.figure(figsize=(10,10))
     for i,cuisine in enumerate(sublist):
@@ -53,7 +58,7 @@ def plot_bokeh(df,sublist,filename):
     print(df_X.shape, lenlist)
 
     dist = squareform(pdist(df_X, metric='cosine'))
-    tsne = TSNE(metric='precomputed', init='random').fit_transform(dist)
+    tsne = TSNE(metric='precomputed', init='random', perplexity=50, learning_rate=200, max_iter=1000).fit_transform(dist)
     #cannot use seaborn palette for bokeh
     palette =['red','green','blue','yellow']
     colors =[]
@@ -84,20 +89,22 @@ if __name__ == '__main__':
     yum_ingr = pd.read_pickle('/Users/ankita/Downloads/Flavor-Network-master/data/yummly_ingr.pkl')
     yum_ingrX = pd.read_pickle('/Users/ankita/Downloads/Flavor-Network-master/data/yummly_ingrX.pkl')
     yum_tfidf = pd.read_pickle('/Users/ankita/Downloads/Flavor-Network-master/data/yum_tfidf.pkl')
-
+    # Tune perplexity and learning rate values
+    perplexity_values = [5, 30, 50]  # Example values
+    learning_rate_values = [10, 200, 500]  # Example values
     #select four cuisines and plot tsne clustering with ingredients
     sublist = ['Italian','French','Japanese','Indian']
     df_ingr = yum_ingrX.copy()
     df_ingr['cuisine'] = yum_ingr['cuisine']
     df_ingr['recipeName'] = yum_ingr['recipeName']
-    tsne_cluster_cuisine(df_ingr,sublist)
+    tsne_cluster_cuisine(df_ingr,sublist,perplexity_values, learning_rate_values)
 
     #select four cuisines and plot tsne clustering with flavor
-    sublist = ['American']
+    sublist = ['Indian', 'American']
     df_flavor = yum_tfidf.copy()
     df_flavor['cuisine'] = yum_ingr['cuisine']
     df_flavor['recipeName'] = yum_ingr['recipeName']
-    tsne_cluster_cuisine(df_flavor,sublist)
+    tsne_cluster_cuisine(df_flavor,sublist,perplexity_values, learning_rate_values)
 
     #select four cuisines and do interactive plotting with bokeh
     # plot_bokeh(df_flavor,sublist, 'test1.html')

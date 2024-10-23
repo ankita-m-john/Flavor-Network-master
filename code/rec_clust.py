@@ -34,7 +34,7 @@ def tsne_cluster_cuisine(df,sublist):
     palette_hex = [to_hex(color) for color in palette]
     
     plt.figure(figsize=(10,10))
-    plt.xaxis.major_label_orientation = 90
+    # plt.xaxis.major_label_orientation = 90
     for i,cuisine in enumerate(sublist):
         plt.scatter(tsne[lenlist[i]:lenlist[i+1],0],
         tsne[lenlist[i]:lenlist[i+1],1],c=palette_hex[i],label=sublist[i])
@@ -90,8 +90,8 @@ def plot_bokeh(df,sublist,filename):
 
     p = figure(width=1000, height=1000, tools=[hover], title="flavor clustering")
     p.xaxis.major_label_orientation = 90
-    color_bar = ColorBar(color_mapper=color_mapper['transform'], width=8, location=(0,0))
-    p.add_layout(color_bar, 'right')
+    # color_bar = ColorBar(color_mapper=color_mapper['transform'], width=8, location=(0,0))
+    # p.add_layout(color_bar, 'right')
 
     p.circle('x', 'y', size=10, source=source, fill_color='colors')
 

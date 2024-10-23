@@ -51,6 +51,7 @@ def plot_similardishes(idx,xlim):
     ax.legend(loc = 'lower right',prop={'size':14})
     ax.set_ylim([20,-1])
     ax.set_xlim(xlim)
+    plt.show()
 
 
 if __name__ == '__main__':
