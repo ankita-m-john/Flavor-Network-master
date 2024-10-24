@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
+from sklearn import decomposition
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
@@ -12,6 +13,9 @@ from sklearn.manifold import MDS, TSNE
 from bokeh.plotting import figure, output_file, show, ColumnDataSource
 from bokeh.models import HoverTool, ColorBar
 from matplotlib.colors import to_hex
+from sklearn.cluster import DBSCAN
+from sklearn.mixture import GaussianMixture
+from sklearn.model_selection import KFold
 
 def tsne_cluster_cuisine(df,sublist):
     lenlist=[0]
@@ -159,62 +163,147 @@ def elbow(yum_ingr):
     plt.xticks(K_range)
     plt.show()
 
-def pca(df_X_scaled):
+def pca(num):
 
-    # Step 2: Apply PCA
-    pca = PCA()
-    pca.fit(df_X_scaled)
+    yum_ingr = pd.read_pickle('/Users/ankita/Downloads/Flavor-Network-master/data/yummly_ingr.pkl')
+    yum_ingrX = pd.read_pickle('/Users/ankita/Downloads/Flavor-Network-master/data/yummly_ingrX.pkl')
+    yum_tfidf = pd.read_pickle('/Users/ankita/Downloads/Flavor-Network-master/data/yum_tfidf.pkl')
+    yum_flavor = pd.read_pickle('/Users/ankita/Downloads/Flavor-Network-master/data/yum_flavor.pkl')
+    # print(yum_flavor)
+    X = yum_ingrX
+    y = yum_ingr['cuisine']
     
-    # Step 3: Calculate explained variance
-    explained_variance = pca.explained_variance_ratio_
-    
-    # Step 4: Determine how many components are needed for 95% variance
-    cumulative_variance = np.cumsum(explained_variance)
-    
-    # Finding number of components to reach 95%
-    num_components = np.argmax(cumulative_variance >= 0.95) + 1  # Adding 1 to get the count
-    
-    # Print the percentage of variance explained by each component
-    for i, variance in enumerate(explained_variance):
-        print(f"Component {i+1}: {variance:.4f} (or {variance*100:.2f}%)")
-    
-    # Print the number of components needed to explain 95% variance
-    print(f"\nNumber of components needed to explain 95% of the variance: {num_components}")
-    
-    # Plotting the explained variance
+    # Using PCA from sklearn PCA
+    pca = PCA(n_components=0.95)
+    X_centered = X - X.mean(axis=0)
+    pca.fit(X_centered)
+    X_pca = pca.transform(X_centered)
+    if (num == 1):
+        return X_pca
+    # Calculate the explained variance ratio
+    explained_variance_ratio = pca.explained_variance_ratio_
+
+    # Cumulative explained variance
+    cumulative_variance = np.cumsum(explained_variance_ratio)
+
+    # print(explained_variance_ratio, cumulative_variance)
+    # Determine the number of components needed to explain 95% of the variance
+    n_components_95 = np.argmax(cumulative_variance >= 0.95) + 1  # Add 1 because np.argmax returns 0-based index
+
+    # Print the number of components needed to explain 95% variability
+    print(f"\nNumber of components required to explain 95% variability: {n_components_95}")
+
+    # Optional: Plot the explained variance
     plt.figure(figsize=(10, 6))
-    plt.plot(range(1, len(explained_variance) + 1), cumulative_variance, marker='o', linestyle='--')
+    plt.plot(cumulative_variance, marker='o', linestyle='--')
     plt.axhline(y=0.95, color='r', linestyle='-')
-    plt.axvline(x=num_components, color='g', linestyle='--')
     plt.title('Cumulative Explained Variance by PCA Components')
     plt.xlabel('Number of Components')
     plt.ylabel('Cumulative Explained Variance')
-    plt.xticks(np.arange(1, len(explained_variance) + 1, step=1))
     plt.grid()
     plt.show()
+    
+    X = yum_tfidf
+     # Using PCA from sklearn PCA
+    pca = PCA(n_components=0.95)
+    X_centered = X - X.mean(axis=0)
+    pca.fit(X_centered)
+    X_pca = pca.transform(X_centered)
+    if (num == 2):
+        return X_pca
+    # Calculate the explained variance ratio
+    explained_variance_ratio = pca.explained_variance_ratio_
 
-def K_Means(df_X_scaled):
+    # Cumulative explained variance
+    cumulative_variance = np.cumsum(explained_variance_ratio)
+
+    # print(explained_variance_ratio, cumulative_variance)
+    # Determine the number of components needed to explain 95% of the variance
+    n_components_95 = np.argmax(cumulative_variance >= 0.95) + 1  # Add 1 because np.argmax returns 0-based index
+
+    # Print the number of components needed to explain 95% variability
+    print(f"\nNumber of components required to explain 95% variability: {n_components_95}")
+
+    # Optional: Plot the explained variance
+    plt.figure(figsize=(10, 6))
+    plt.plot(cumulative_variance, marker='o', linestyle='--')
+    plt.axhline(y=0.95, color='r', linestyle='-')
+    plt.title('Cumulative Explained Variance by PCA Components')
+    plt.xlabel('Number of Components')
+    plt.ylabel('Cumulative Explained Variance of Flavour')
+    plt.grid()
+    plt.show()
+    return X_pca
+
+def K_Means():
     # Perform K-Means clustering with k=7
     k = 8
     kmeans = KMeans(n_clusters=k, init="k-means++", random_state=42)
-    kmeans.fit(df_X_scaled)
+    # Reduce the data dimensions using PCA for visualization
+    X_pca = pca(1)
+    kmeans.fit(X_pca)
     labels = kmeans.labels_
 
     # Add cluster labels to the original DataFrame
     df_X['Cluster'] = labels
-
-    # Reduce the data to 2 dimensions using PCA for visualization
-    pca = PCA(n_components=208)
-    X_pca = pca.fit_transform(df_X_scaled)
-
+    
     # Plot the clustering results
     plt.figure(figsize=(10, 7))
-    plt.scatter(X_pca[:, 0], X_pca[:, 1], c=labels, cmap='viridis', s=50, marker='o', alpha=0.7)
+    plt.scatter(X_pca[:, 0], X_pca[:, 1], c=labels, cmap='Set1', s=50, marker='o', alpha=0.7)
     plt.title(f'K-Means Clustering with k={k}')
     plt.xlabel('Principal Component 1')
     plt.ylabel('Principal Component 2')
     plt.colorbar(label='Cluster Label')
     plt.grid(True)
+    plt.show()
+
+def DBScan():
+    # Scale the data
+    scaler = StandardScaler()
+    X_scaled = scaler.fit_transform(df_X)
+
+    # Fit DBSCAN
+    dbscan = DBSCAN(eps=40, min_samples=25)  # Adjust eps and min_samples as needed
+    dbscan_labels = dbscan.fit_predict(X_scaled)
+
+    # Handling noise points (label -1 represents noise in DBSCAN)
+    unique_labels = np.unique(dbscan_labels)
+    n_clusters = len(unique_labels) - (1 if -1 in unique_labels else 0)
+    
+    X_pca = pca(1)
+    # Visualize the DBSCAN results
+    plt.figure(figsize=(10, 6))
+    plt.scatter(X_pca[:, 0], X_pca[:, 1], c=dbscan_labels,  cmap='Set1', marker='o')
+    plt.title("DBSCAN Clustering")
+    plt.xlabel("Ingredients")
+    plt.ylabel("Cuisine")
+    plt.colorbar(label='Cluster Label')
+    plt.show()
+
+def GMM():
+    
+    n_components_range = range(1, 25)
+    log_likelihoods = []
+    X_pca = pca(1)
+    for n in n_components_range:
+        gmm = GaussianMixture(n_components=n, random_state=42)
+        gmm.fit(df_X)
+        log_likelihoods.append(gmm.score(df_X))  # Log-likelihood for this model
+
+    plt.plot(n_components_range, log_likelihoods, marker='o')
+    plt.xlabel('Number of Components')
+    plt.ylabel('Log-Likelihood')
+    plt.title('Elbow Method for Choosing n_components')
+    plt.show()
+    optimal_k = 8
+    # GMM Clustering
+    gmm = GaussianMixture(n_components=8, random_state=42, init_params='random', covariance_type='full')
+    gmm_labels = gmm.fit_predict(X_pca)
+    print(X_pca.dtype)
+    # Visualize GMM results
+    plt.figure(figsize=(8, 5))
+    sns.scatterplot(x=X_pca[:, 0], y=X_pca[:, 1], hue=gmm_labels, palette='Set1')
+    plt.title('GMM Clustering Results')
     plt.show()
 
 if __name__ == '__main__':
@@ -242,12 +331,13 @@ if __name__ == '__main__':
     
     # Step 1: Preprocess the Data
     # Drop non-numeric columns if any, like 'cuisine' or 'recipeName'
-    df_X = yum_ingrX.drop(columns=['cuisine', 'recipeName'], errors='ignore')  # Use errors='ignore' to skip if those columns don't exist
+    df_X = df_ingr.drop(columns=['cuisine', 'recipeName'], errors='ignore')  # Use errors='ignore' to skip if those columns don't exist
     df_X = pd.get_dummies(df_X, columns=df_X.columns, drop_first=True)
     # Standardize the data (important for PCA)
     scaler = StandardScaler()
     df_X_scaled = scaler.fit_transform(df_X)
-    pca(df_X_scaled)
-    elbow(yum_ingr)
-    K_Means(df_X_scaled)
-    
+    # X_pca = pca(0)
+    # elbow(yum_ingr)
+    # K_Means()
+    # DBScan()
+    GMM()
