@@ -2,14 +2,12 @@ import pandas as pd
 import numpy as np
 from sklearn.cluster import KMeans
 from sklearn.metrics import silhouette_score
-from sklearn import decomposition
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.spatial.distance import pdist, squareform
 from sklearn.manifold import MDS, TSNE
-# from bokeh.palettes import Category10, Category20, Viridis256
 from bokeh.plotting import figure, output_file, show, ColumnDataSource
 from bokeh.models import HoverTool, ColorBar
 from matplotlib.colors import to_hex
@@ -261,7 +259,11 @@ def DBScan():
     # Scale the data
     scaler = StandardScaler()
     X_scaled = scaler.fit_transform(df_X)
-
+    
+    # X_pca = pca(1)
+    tsne = TSNE(n_components=2, random_state=42)
+    X_tsne = tsne.fit_transform(X_scaled)
+    
     # Fit DBSCAN
     dbscan = DBSCAN(eps=40, min_samples=25)  # Adjust eps and min_samples as needed
     dbscan_labels = dbscan.fit_predict(X_scaled)
@@ -269,11 +271,27 @@ def DBScan():
     # Handling noise points (label -1 represents noise in DBSCAN)
     unique_labels = np.unique(dbscan_labels)
     n_clusters = len(unique_labels) - (1 if -1 in unique_labels else 0)
-    
-    X_pca = pca(1)
+    print(f"Number of clusters (excluding noise): {n_clusters}")
+    print(f"Noise points: {sum(dbscan_labels == -1)}")
+
     # Visualize the DBSCAN results
     plt.figure(figsize=(10, 6))
-    plt.scatter(X_pca[:, 0], X_pca[:, 1], c=dbscan_labels,  cmap='Set1', marker='o')
+    # Assign colors for each cluster, using 'gray' for noise points
+    for label in unique_labels:
+        if label == -1:
+            # Plot noise points (label -1) as gray
+            color = 'black'
+            marker = 'x'  # Optional: Change marker for noise points
+            label_name = 'Noise'
+        else:
+            # Assign a color to each cluster
+            color = plt.cm.Set1(label / (n_clusters + 1))
+            marker = 'o'
+            label_name = f'Cluster {label}'
+    
+        plt.scatter(X_tsne[dbscan_labels == label, 0], X_tsne[dbscan_labels == label, 1], 
+                c=color, s=50, marker=marker, alpha=0.7, label=label_name)
+    # plt.scatter(X_tsne[:, 0], X_tsne[:, 1], c=dbscan_labels,  cmap='Set1', marker='o')
     plt.title("DBSCAN Clustering")
     plt.xlabel("Ingredients")
     plt.ylabel("Cuisine")
@@ -339,5 +357,5 @@ if __name__ == '__main__':
     # X_pca = pca(0)
     # elbow(yum_ingr)
     # K_Means()
-    # DBScan()
-    GMM()
+    DBScan()
+    # GMM()
