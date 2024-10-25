@@ -318,15 +318,15 @@ def GMM():
     plt.ylabel('Log-Likelihood')
     plt.title('Elbow Method for Choosing n_components')
     plt.show()
-    optimal_k = 8
+    optimal_k = 4
     # GMM Clustering
-    gmm = GaussianMixture(n_components=8, random_state=42, init_params='random', covariance_type='full')
+    gmm = GaussianMixture(n_components=optimal_k, random_state=42, init_params='random', covariance_type='full')
     gmm_labels = gmm.fit_predict(X_pca)
     
     # Visualize GMM results
     plt.figure(figsize=(8, 5))
     sns.scatterplot(x=X_pca[:, 0], y=X_pca[:, 1], hue=gmm_labels, palette='Set1')
-    plt.title('GMM Clustering Results')
+    plt.title('GMM Clustering Results for Ingredients feature')
     plt.show()
 
     #For flavors:
@@ -343,15 +343,15 @@ def GMM():
     plt.ylabel('Log-Likelihood')
     plt.title('Elbow Method for Choosing n_components')
     plt.show()
-    optimal_k = 8
+    optimal_k = 10
     # GMM Clustering
-    gmm = GaussianMixture(n_components=8, random_state=42, init_params='random', covariance_type='full')
+    gmm = GaussianMixture(n_components=optimal_k, random_state=42, init_params='random', covariance_type='full')
     gmm_labels = gmm.fit_predict(X_pca)
     
     # Visualize GMM results
     plt.figure(figsize=(8, 5))
     sns.scatterplot(x=X_pca[:, 0], y=X_pca[:, 1], hue=gmm_labels, palette='Set1')
-    plt.title('GMM Clustering Results')
+    plt.title('GMM Clustering Results for Flavors feature')
     plt.show()
 
 if __name__ == '__main__':
@@ -364,20 +364,21 @@ if __name__ == '__main__':
     df_ingr = yum_ingrX.copy()
     df_ingr['cuisine'] = yum_ingr['cuisine']
     df_ingr['recipeName'] = yum_ingr['recipeName']
-    # tsne_cluster_cuisine(df_ingr,sublist)
+    tsne_cluster_cuisine(df_ingr,sublist)
 
     #select all unique cuisines and plot tsne clustering with flavor
     sublist = yum_ingr['cuisine'].unique()
     df_flavor = yum_tfidf.copy()
     df_flavor['cuisine'] = yum_ingr['cuisine']
     df_flavor['recipeName'] = yum_ingr['recipeName']
-    # tsne_cluster_cuisine(df_flavor,sublist)
+    tsne_cluster_cuisine(df_flavor,sublist)
     
     # Drop non-numeric columns if any, like 'cuisine' or 'recipeName'
     df_X_ingr = df_ingr.drop(columns=['cuisine', 'recipeName'], errors='ignore')  # Use errors='ignore' to skip if those columns don't exist
     df_X_ingr = pd.get_dummies(df_X_ingr, columns=df_X_ingr.columns, drop_first=True)
     df_X_flavor = df_flavor.drop(columns=['cuisine', 'recipeName'], errors='ignore')  # Use errors='ignore' to skip if those columns don't exist
     # df_X_flavor = pd.get_dummies(df_X_flavor, columns=df_X_flavor.columns, drop_first=True)
+    
     # Check if the DataFrame is empty
     if df_X_ingr.empty:
         print("DataFrame df_X is empty!")
@@ -405,8 +406,8 @@ if __name__ == '__main__':
     df_ingr_scaled = scaler.fit_transform(df_X_ingr)
     df_flavor_scaled = scaler.fit_transform(df_X_flavor)
 
-    # X_pca = pca(0)
-    # elbow_Sil()
-    # K_Means()
-    # DBScan()
+    X_pca = pca(0)
+    elbow_Sil()
+    K_Means()
+    DBScan()
     GMM()
