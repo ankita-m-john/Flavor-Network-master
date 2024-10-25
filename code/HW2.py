@@ -145,6 +145,9 @@ def pca(num):
     cumulative_variance = np.cumsum(explained_variance_ratio)
     # Determine the number of components needed to explain 95% of the variance
     n_components_95 = np.argmax(cumulative_variance >= 0.95) + 1  # Add 1 because np.argmax returns 0-based index
+    # List percentage of variance explained by each component
+    for i, ratio in enumerate(pca.explained_variance_ratio_):
+        print(f'Component {i+1}: {ratio*100:.2f}%')
     # Print the number of components needed to explain 95% variability
     print(f"\nNumber of components required to explain 95% variability: {n_components_95}")
 
@@ -172,6 +175,9 @@ def pca(num):
     cumulative_variance = np.cumsum(explained_variance_ratio)
     # Determine the number of components needed to explain 95% of the variance
     n_components_95 = np.argmax(cumulative_variance >= 0.95) + 1  # Add 1 because np.argmax returns 0-based index
+    # List percentage of variance explained by each component
+    for i, ratio in enumerate(pca.explained_variance_ratio_):
+        print(f'Component {i+1}: {ratio*100:.2f}%')
     # Print the number of components needed to explain 95% variability
     print(f"\nNumber of components required to explain 95% variability: {n_components_95}")
 
@@ -371,7 +377,7 @@ def HierScan():
         print(f'Silhouette Score: {i} {score}')
 
     # Set a threshold distance to cut the dendrogram
-    max_distance = 5 # Adjust this value based on the dendrogram
+    max_distance = 20 # Adjust this value based on the dendrogram
 
     # Get cluster labels by cutting the dendrogram at the threshold distance
     clusters = fcluster(linked, max_distance, criterion='distance')
@@ -436,7 +442,7 @@ if __name__ == '__main__':
     df_ingr = yum_ingrX.copy()
     df_ingr['cuisine'] = yum_ingr['cuisine']
     df_ingr['recipeName'] = yum_ingr['recipeName']
-    # tsne_cluster_cuisine(df_ingr,sublist)
+    tsne_cluster_cuisine(df_ingr,sublist)
 
     #select all unique cuisines and plot tsne clustering with flavor
     sublist = yum_ingr['cuisine'].unique()
@@ -449,7 +455,6 @@ if __name__ == '__main__':
     df_X_ingr = df_ingr.drop(columns=['cuisine', 'recipeName'], errors='ignore')  # Use errors='ignore' to skip if those columns don't exist
     df_X_ingr = pd.get_dummies(df_X_ingr, columns=df_X_ingr.columns, drop_first=True)
     df_X_flavor = df_flavor.drop(columns=['cuisine', 'recipeName'], errors='ignore')  # Use errors='ignore' to skip if those columns don't exist
-    df_X_flavor = pd.get_dummies(df_X_flavor, columns=df_X_flavor.columns, drop_first=True)
     
     # Check if the DataFrame is empty
     if df_X_ingr.empty:
