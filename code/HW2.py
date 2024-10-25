@@ -443,13 +443,13 @@ if __name__ == '__main__':
     df_flavor = yum_tfidf.copy()
     df_flavor['cuisine'] = yum_ingr['cuisine']
     df_flavor['recipeName'] = yum_ingr['recipeName']
-    # tsne_cluster_cuisine(df_flavor,sublist)
+    tsne_cluster_cuisine(df_flavor,sublist)
     
     # Drop non-numeric columns if any, like 'cuisine' or 'recipeName'
     df_X_ingr = df_ingr.drop(columns=['cuisine', 'recipeName'], errors='ignore')  # Use errors='ignore' to skip if those columns don't exist
     df_X_ingr = pd.get_dummies(df_X_ingr, columns=df_X_ingr.columns, drop_first=True)
     df_X_flavor = df_flavor.drop(columns=['cuisine', 'recipeName'], errors='ignore')  # Use errors='ignore' to skip if those columns don't exist
-    # df_X_flavor = pd.get_dummies(df_X_flavor, columns=df_X_flavor.columns, drop_first=True)
+    df_X_flavor = pd.get_dummies(df_X_flavor, columns=df_X_flavor.columns, drop_first=True)
     
     # Check if the DataFrame is empty
     if df_X_ingr.empty:
@@ -478,9 +478,9 @@ if __name__ == '__main__':
     df_ingr_scaled = scaler.fit_transform(df_X_ingr)
     df_flavor_scaled = scaler.fit_transform(df_X_flavor)
 
-    # X_pca = pca(0)
-    # elbow_Sil()
-    # K_Means()
-    # DBScan()
-    # GMM()
+    X_pca = pca(0)
+    elbow_Sil()
+    K_Means()
+    DBScan()
+    GMM()
     HierScan()
