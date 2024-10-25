@@ -1,4 +1,4 @@
- #!/usr/bin/env python3
+ #!/usr/bin/ML python3
  # -*- coding: utf-8 -*-
 import pandas as pd
 import numpy as np
@@ -9,7 +9,7 @@ from sklearn.preprocessing import StandardScaler
 import matplotlib.pyplot as plt
 import seaborn as sns
 from scipy.spatial.distance import pdist, squareform
-from sklearn.manifold import MDS, TSNE
+from sklearn.manifold import TSNE
 from matplotlib.colors import to_hex
 from sklearn.cluster import DBSCAN
 from sklearn.mixture import GaussianMixture
@@ -43,7 +43,7 @@ def tsne_cluster_cuisine(df,sublist):
     plt.show()
 
 def elbow_Sil():
-    # Elbow method
+    # Elbow method plotting for KMeans
     inertia = []
     K_range = range(2, 21)  # Testing K from 2 to 20
 
@@ -62,19 +62,19 @@ def elbow_Sil():
     plt.xticks(K_range)
     plt.show()
 
-    # Silhouette analysis
+    # Silhouette analysis for KMeans
     silhouette_scores = []
 
     for k in K_range:
         kmeans = KMeans(n_clusters=k, random_state=42)
-        cluster_labels = kmeans.fit_predict(df_flavor_scaled)
-        silhouette_avg = silhouette_score(df_flavor_scaled, cluster_labels)
+        cluster_labels = kmeans.fit_predict(df_ingr_scaled)
+        silhouette_avg = silhouette_score(df_ingr_scaled, cluster_labels)
         silhouette_scores.append(silhouette_avg)
 
     # Plotting silhouette scores
     plt.figure(figsize=(10, 5))
     plt.plot(K_range, silhouette_scores, marker='o')
-    plt.title('Silhouette Analysis for Optimal K')
+    plt.title('Silhouette Analysis for Ingredients')
     plt.xlabel('Number of clusters (K)')
     plt.ylabel('Silhouette Score')
     plt.grid()
@@ -82,7 +82,7 @@ def elbow_Sil():
     plt.show()
 
     #For flavours:
-    # Elbow method
+    # Elbow method plotting for KMeans
     inertia = []
     K_range = range(2, 21)  # Testing K from 2 to 20
 
@@ -94,19 +94,19 @@ def elbow_Sil():
     # Plotting the elbow method
     plt.figure(figsize=(10, 5))
     plt.plot(K_range, inertia, marker='o')
-    plt.title('Elbow Method for Ingredients:')
+    plt.title('Elbow Method for Flavors:')
     plt.xlabel('Number of clusters (K)')
     plt.ylabel('Inertia')
     plt.grid()
     plt.xticks(K_range)
     plt.show()
 
-    # Silhouette analysis
+    # Silhouette analysis for KMeans
     silhouette_scores = []
     for k in K_range:
         kmeans = KMeans(n_clusters=k, random_state=42)
-        cluster_labels = kmeans.fit_predict(df_ingr_scaled)
-        silhouette_avg = silhouette_score(df_ingr_scaled, cluster_labels)
+        cluster_labels = kmeans.fit_predict(df_X_flavor)
+        silhouette_avg = silhouette_score(df_X_flavor, cluster_labels)
         silhouette_scores.append(silhouette_avg)
     # Plotting silhouette scores
     plt.figure(figsize=(10, 5))
@@ -121,13 +121,20 @@ def elbow_Sil():
 def pca(num):
     
     #For ingredients:
-    X = df_ingr
+    X = df_X_ingr
     # Using PCA from sklearn PCA
     pca = PCA(n_components=0.95)
     X_centered = X - X.mean(axis=0)
     pca.fit(X_centered)
     X_pca = pca.transform(X_centered)
     if (num == 1):
+        pca = PCA(n_components=2)
+        X_centered = X - X.mean(axis=0)
+        pca.fit(X_centered)
+        X_pca = pca.transform(X_centered)
+        return X_pca
+    if (num == 2):
+        X = df_X_flavor
         pca = PCA(n_components=2)
         X_centered = X - X.mean(axis=0)
         pca.fit(X_centered)
@@ -153,18 +160,13 @@ def pca(num):
     plt.show()
     
     #For flavors:
-    X = df_flavor
+    X = df_X_flavor
     # Using PCA from sklearn PCA
     pca = PCA(n_components=0.95)
     X_centered = X - X.mean(axis=0)
     pca.fit(X_centered)
     X_pca = pca.transform(X_centered)
-    if (num == 2):
-        pca = PCA(n_components=2)
-        X_centered = X - X.mean(axis=0)
-        pca.fit(X_centered)
-        X_pca = pca.transform(X_centered)
-        return X_pca
+    
     # Calculate the explained variance ratio
     explained_variance_ratio = pca.explained_variance_ratio_
     # Cumulative explained variance
@@ -217,7 +219,7 @@ def GridS():
     return(best_params['eps'], best_params['min_samples'])
 
 def K_Means():
-    # Perform K-Means clustering with k=7
+    # Perform K-Means clustering for ingredients:
     k = 8
     kmeans = KMeans(n_clusters=k, init="k-means++", random_state=42)
     # Reduce the data dimensions using PCA for visualization
@@ -228,7 +230,25 @@ def K_Means():
     # Plot the clustering results
     plt.figure(figsize=(10, 7))
     plt.scatter(X_pca[:, 0], X_pca[:, 1], c=labels, cmap='Set1', s=50, marker='o', alpha=0.7)
-    plt.title(f'K-Means Clustering with k={k}')
+    plt.title(f'K-Means Clustering for ingredients with k={k}')
+    plt.xlabel('Principal Component 1')
+    plt.ylabel('Principal Component 2')
+    plt.colorbar(label='Cluster Label')
+    plt.grid(True)
+    plt.show()
+
+    #For flavors:
+    k = 12
+    kmeans = KMeans(n_clusters=k, init="k-means++", random_state=42)
+    # Reduce the data dimensions using PCA for visualization
+    X_pca = pca(2)
+    kmeans.fit(X_pca)
+    labels = kmeans.labels_
+    
+    # Plot the clustering results
+    plt.figure(figsize=(10, 7))
+    plt.scatter(X_pca[:, 0], X_pca[:, 1], c=labels, cmap='Set1', s=50, marker='o', alpha=0.7)
+    plt.title(f'K-Means Clustering for flavors with k={k}')
     plt.xlabel('Principal Component 1')
     plt.ylabel('Principal Component 2')
     plt.colorbar(label='Cluster Label')
@@ -236,13 +256,10 @@ def K_Means():
     plt.show()
 
 def DBScan():
-    # Scale the data
-    scaler = StandardScaler()
-    X_scaled = scaler.fit_transform(df_ingr)
-    
+    #For Ingredients:
     # Dimensionality reduction using t-sne for high density data
     tsne = TSNE(n_components=2, random_state=42)
-    X_tsne = tsne.fit_transform(X_scaled)
+    X_tsne = tsne.fit_transform(df_ingr_scaled)
     ideal_eps, ideal_min = GridS()
     # Fit DBSCAN
     dbscan = DBSCAN(eps=ideal_eps, min_samples=ideal_min)  # Adjust eps and min_samples as needed
@@ -257,8 +274,32 @@ def DBScan():
     # Visualize the DBSCAN results
     plt.figure(figsize=(10, 6))
     plt.scatter(X_tsne[:, 0], X_tsne[:, 1], c=dbscan_labels,  cmap='Set1', marker='o')
-    plt.title("DBSCAN Clustering")
+    plt.title("DBSCAN Clustering for ingredients")
     plt.xlabel("Ingredients")
+    plt.ylabel("Cuisine")
+    plt.colorbar(label='Cluster Label')
+    plt.show()
+
+    #For Flavors:
+    # Dimensionality reduction using t-sne for high density data
+    tsne = TSNE(n_components=2, random_state=42)
+    X_tsne = tsne.fit_transform(df_flavor_scaled)
+    ideal_eps, ideal_min = GridS()
+    # Fit DBSCAN
+    dbscan = DBSCAN(eps=ideal_eps, min_samples=ideal_min)  # Adjust eps and min_samples as needed
+    dbscan_labels = dbscan.fit_predict(X_tsne)
+
+    # Handling noise points (label -1 represents noise in DBSCAN)
+    unique_labels = np.unique(dbscan_labels)
+    n_clusters = len(unique_labels) - (1 if -1 in unique_labels else 0)
+    print(f"Number of clusters (excluding noise): {n_clusters}")
+    print(f"Noise points: {sum(dbscan_labels == -1)}")
+
+    # Visualize the DBSCAN results
+    plt.figure(figsize=(10, 6))
+    plt.scatter(X_tsne[:, 0], X_tsne[:, 1], c=dbscan_labels,  cmap='Set1', marker='o')
+    plt.title("DBSCAN Clustering for flavors")
+    plt.xlabel("Flavors")
     plt.ylabel("Cuisine")
     plt.colorbar(label='Cluster Label')
     plt.show()
@@ -281,13 +322,37 @@ def GMM():
     # GMM Clustering
     gmm = GaussianMixture(n_components=8, random_state=42, init_params='random', covariance_type='full')
     gmm_labels = gmm.fit_predict(X_pca)
-    print(X_pca.dtype)
+    
     # Visualize GMM results
     plt.figure(figsize=(8, 5))
     sns.scatterplot(x=X_pca[:, 0], y=X_pca[:, 1], hue=gmm_labels, palette='Set1')
     plt.title('GMM Clustering Results')
     plt.show()
 
+    #For flavors:
+    n_components_range = range(1, 25)
+    log_likelihoods = []
+    X_pca = pca(2)
+    for n in n_components_range:
+        gmm = GaussianMixture(n_components=n, random_state=42)
+        gmm.fit(X_pca)
+        log_likelihoods.append(gmm.score(X_pca))  # Log-likelihood for this model
+
+    plt.plot(n_components_range, log_likelihoods, marker='o')
+    plt.xlabel('Number of Components')
+    plt.ylabel('Log-Likelihood')
+    plt.title('Elbow Method for Choosing n_components')
+    plt.show()
+    optimal_k = 8
+    # GMM Clustering
+    gmm = GaussianMixture(n_components=8, random_state=42, init_params='random', covariance_type='full')
+    gmm_labels = gmm.fit_predict(X_pca)
+    
+    # Visualize GMM results
+    plt.figure(figsize=(8, 5))
+    sns.scatterplot(x=X_pca[:, 0], y=X_pca[:, 1], hue=gmm_labels, palette='Set1')
+    plt.title('GMM Clustering Results')
+    plt.show()
 
 if __name__ == '__main__':
     yum_ingr = pd.read_pickle('/Users/ankita/Downloads/Flavor-Network-master/data/yummly_ingr.pkl')
@@ -309,19 +374,39 @@ if __name__ == '__main__':
     # tsne_cluster_cuisine(df_flavor,sublist)
     
     # Drop non-numeric columns if any, like 'cuisine' or 'recipeName'
-    df_ingr = df_ingr.drop(columns=['cuisine', 'recipeName'], errors='ignore')  # Use errors='ignore' to skip if those columns don't exist
-    df_ingr = pd.get_dummies(df_ingr, columns=df_ingr.columns, drop_first=True)
-    df_flavor = df_flavor.drop(columns=['cuisine', 'recipeName'], errors='ignore')  # Use errors='ignore' to skip if those columns don't exist
-    df_flavor = pd.get_dummies(df_flavor, columns=df_flavor.columns, drop_first=True)
+    df_X_ingr = df_ingr.drop(columns=['cuisine', 'recipeName'], errors='ignore')  # Use errors='ignore' to skip if those columns don't exist
+    df_X_ingr = pd.get_dummies(df_X_ingr, columns=df_X_ingr.columns, drop_first=True)
+    df_X_flavor = df_flavor.drop(columns=['cuisine', 'recipeName'], errors='ignore')  # Use errors='ignore' to skip if those columns don't exist
+    # df_X_flavor = pd.get_dummies(df_X_flavor, columns=df_X_flavor.columns, drop_first=True)
+    # Check if the DataFrame is empty
+    if df_X_ingr.empty:
+        print("DataFrame df_X is empty!")
+    else:
+        print("Shape of df_X:", df_X_ingr.shape)
     
-    # Standardize the data (important for PCA)
+    # Check for missing values
+    if df_X_ingr.isnull().sum().any():
+        print("Missing values detected, filling NaN values with 0.")
+        df_X_ingr = df_X_ingr.fillna(0)  # Handle missing values
+    
+    # Check if the DataFrame is empty
+    if df_X_flavor.empty:
+        print("DataFrame df is empty!")
+    else:
+        print("Shape of df_X_flavor:", df_X_flavor.shape)
+    
+    # Check for missing values
+    if df_X_flavor.isnull().sum().any():
+        print("Missing values detected, filling NaN values with 0.")
+        df_X_flavor = df_X_flavor.fillna(0)  # Handle missing values
+    
+    # Standardize the data 
     scaler = StandardScaler()
-    df_ingr_scaled = scaler.fit_transform(df_ingr)
-    scaler = StandardScaler()
-    df_flavor_scaled = scaler.fit_transform(df_flavor)
-    print("Got here")
+    df_ingr_scaled = scaler.fit_transform(df_X_ingr)
+    df_flavor_scaled = scaler.fit_transform(df_X_flavor)
+
     # X_pca = pca(0)
     # elbow_Sil()
     # K_Means()
     # DBScan()
-    # GMM()
+    GMM()
