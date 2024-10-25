@@ -2,7 +2,7 @@
  # -*- coding: utf-8 -*-
 import pandas as pd
 import numpy as np
-from sklearn.cluster import KMeans
+from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering
 from sklearn.metrics import silhouette_score
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
@@ -11,10 +11,9 @@ import seaborn as sns
 from scipy.spatial.distance import pdist, squareform
 from sklearn.manifold import TSNE
 from matplotlib.colors import to_hex
-from sklearn.cluster import DBSCAN
 from sklearn.mixture import GaussianMixture
-from sklearn.model_selection import KFold
-from sklearn.model_selection import ParameterGrid
+from sklearn.model_selection import KFold, ParameterGrid
+from scipy.cluster.hierarchy import dendrogram, linkage, fcluster
 
 def tsne_cluster_cuisine(df,sublist):
     lenlist=[0]
@@ -354,6 +353,79 @@ def GMM():
     plt.title('GMM Clustering Results for Flavors feature')
     plt.show()
 
+def HierScan():
+    #For ingredients:
+    X_pca = pca(1)
+    linked = linkage(X_pca, method='ward')
+    plt.figure(figsize=(10, 7))
+    dendrogram(linked)
+    plt.title("Hierarchical Clustering Dendrogram for Ingredients")
+    plt.xlabel("Sample index")
+    plt.ylabel("Distance")
+    plt.show()
+    for i in range(0, 16):
+        clusters = fcluster(linked, i, criterion='distance')
+        data_with_clusters = pd.DataFrame(X_pca)
+        data_with_clusters['Cluster'] = clusters    
+        score = silhouette_score(X_pca, clusters)
+        print(f'Silhouette Score: {i} {score}')
+
+    # Set a threshold distance to cut the dendrogram
+    max_distance = 5 # Adjust this value based on the dendrogram
+
+    # Get cluster labels by cutting the dendrogram at the threshold distance
+    clusters = fcluster(linked, max_distance, criterion='distance')
+
+    # Print the number of clusters and cluster labels
+    num_clusters = len(set(clusters))
+    print(f"Number of clusters: {num_clusters}")
+    print("Cluster labels:", clusters)
+
+    hier_clust = AgglomerativeClustering(n_clusters=num_clusters, linkage='ward')
+    hier_labels = hier_clust.fit_predict(X_pca)
+
+    # Visualize Hierarchical Clustering
+    plt.figure(figsize=(10,5))
+    sns.scatterplot(x=X_pca[:,0], y=X_pca[:,1], hue=hier_labels, palette='Set1')
+    plt.title('Hierarchical Clustering')
+    plt.show()
+
+    #For flavors:
+    X_pca = pca(2)
+    linked = linkage(X_pca, method='ward')
+    plt.figure(figsize=(10, 7))
+    dendrogram(linked)
+    plt.title("Hierarchical Clustering Dendrogram for Flavors")
+    plt.xlabel("Sample index")
+    plt.ylabel("Distance")
+    plt.show()
+    for i in range(0, 16):
+        clusters = fcluster(linked, i, criterion='distance')
+        data_with_clusters = pd.DataFrame(X_pca)
+        data_with_clusters['Cluster'] = clusters    
+        score = silhouette_score(X_pca, clusters)
+        print(f'Silhouette Score: {i} {score}')
+
+    # Set a threshold distance to cut the dendrogram
+    max_distance = 5 # Adjust this value based on the dendrogram
+
+    # Get cluster labels by cutting the dendrogram at the threshold distance
+    clusters = fcluster(linked, max_distance, criterion='distance')
+
+    # Print the number of clusters and cluster labels
+    num_clusters = len(set(clusters))
+    print(f"Number of clusters: {num_clusters}")
+    print("Cluster labels:", clusters)
+
+    hier_clust = AgglomerativeClustering(n_clusters=num_clusters, linkage='ward')
+    hier_labels = hier_clust.fit_predict(X_pca)
+
+    # Visualize Hierarchical Clustering
+    plt.figure(figsize=(10,5))
+    sns.scatterplot(x=X_pca[:,0], y=X_pca[:,1], hue=hier_labels, palette='Set1')
+    plt.title('Hierarchical Clustering')
+    plt.show()
+
 if __name__ == '__main__':
     yum_ingr = pd.read_pickle('/Users/ankita/Downloads/Flavor-Network-master/data/yummly_ingr.pkl')
     yum_ingrX = pd.read_pickle('/Users/ankita/Downloads/Flavor-Network-master/data/yummly_ingrX.pkl')
@@ -364,14 +436,14 @@ if __name__ == '__main__':
     df_ingr = yum_ingrX.copy()
     df_ingr['cuisine'] = yum_ingr['cuisine']
     df_ingr['recipeName'] = yum_ingr['recipeName']
-    tsne_cluster_cuisine(df_ingr,sublist)
+    # tsne_cluster_cuisine(df_ingr,sublist)
 
     #select all unique cuisines and plot tsne clustering with flavor
     sublist = yum_ingr['cuisine'].unique()
     df_flavor = yum_tfidf.copy()
     df_flavor['cuisine'] = yum_ingr['cuisine']
     df_flavor['recipeName'] = yum_ingr['recipeName']
-    tsne_cluster_cuisine(df_flavor,sublist)
+    # tsne_cluster_cuisine(df_flavor,sublist)
     
     # Drop non-numeric columns if any, like 'cuisine' or 'recipeName'
     df_X_ingr = df_ingr.drop(columns=['cuisine', 'recipeName'], errors='ignore')  # Use errors='ignore' to skip if those columns don't exist
@@ -406,8 +478,9 @@ if __name__ == '__main__':
     df_ingr_scaled = scaler.fit_transform(df_X_ingr)
     df_flavor_scaled = scaler.fit_transform(df_X_flavor)
 
-    X_pca = pca(0)
-    elbow_Sil()
-    K_Means()
-    DBScan()
-    GMM()
+    # X_pca = pca(0)
+    # elbow_Sil()
+    # K_Means()
+    # DBScan()
+    # GMM()
+    HierScan()
